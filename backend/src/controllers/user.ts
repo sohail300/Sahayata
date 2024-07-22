@@ -2,14 +2,13 @@ import { Request, Response } from "express";
 import axios from "axios";
 import { Emergency, Contact, User, Admin } from "../db/schema";
 import {
-  contactSchema,
-  emergencyCaseSchema,
   sendOTPSchema,
   updateUserSchema,
   verifyOTPSchema,
-} from "../types/zodTypes";
+} from "../types/userSchema";
 import { getTodayDate } from "../utils/getDate";
 import twilio from "twilio";
+import { contactSchema, emergencyCaseSchema } from "../types/caseSchema";
 
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const accountSid = process.env.TWILIO_ACCOUNT_SID;

@@ -1,23 +1,67 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { api } from "@/utils/config";
+import { AxiosError } from "axios";
+import { ApiResponse } from "@/types/apiResponse";
+import { loginSchema, loginType } from "@/types/districtAdminSchema";
 
 export default function DistrictAdminLogin() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    navigate("/districtadmin/homepage");
-  };
+  const form = useForm<loginType>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      number: "",
+      password: "",
+    },
+  });
 
-  useEffect(() => {
-    const isValidEmail = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email);
-    const isPasswordValid = password.length >= 7;
-    setIsButtonDisabled(!isValidEmail || !isPasswordValid);
-  }, [email, password]);
+  async function onSubmit(values: loginType) {
+    try {
+      setIsSubmitting(true);
+      const response = await api.post("/district/login", values);
+      console.log(response);
+
+      if (response.data.success) {
+        localStorage.setItem("token", response.data.token);
+        navigate("/districtadmin/homepage");
+      }
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<ApiResponse>;
+      console.log(axiosError);
+
+      if (axiosError.response) {
+        toast({
+          variant: "destructive",
+          title: axiosError.response.data.msg,
+          description: "Please try again",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error logging in",
+          description: "Please try again",
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100 flex flex-col justify-center items-center p-4">
@@ -27,71 +71,66 @@ export default function DistrictAdminLogin() {
           <p className="text-emerald-600 mt-2">District Admin Login</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Email Address
-            </label>
-            <div className="relative">
-              <input
-                type="email"
-                id="email"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 pl-10"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-              <Mail
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                size={18}
-              />
-            </div>
-          </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type="password"
-                id="password"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 pl-10"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <Lock
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                size={18}
-              />
-            </div>
-          </div>
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="block text-sm font-medium text-gray-700 mb-1">
+                    Password
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+                      type="password"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <button
-            type="submit"
-            className={`w-full bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 transition duration-300 ease-in-out flex items-center justify-center ${
-              isButtonDisabled ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            disabled={isButtonDisabled}
-          >
-            Login
-            <ArrowRight className="ml-2" size={18} />
-          </button>
-        </form>
+            <Button
+              type="submit"
+              className={`w-full bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 transition duration-300 ease-in-out flex items-center justify-center ${
+                isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              disabled={isSubmitting}
+            >
+              Login
+            </Button>
+          </form>
+        </Form>
 
         <div className="mt-6 text-center">
-          <a href="#" className="text-sm text-emerald-600 hover:underline">
+          <NavLink
+            to={"/districtadmin/forgotpassword"}
+            className="text-sm text-emerald-600 hover:underline"
+          >
             Forgot password?
-          </a>
+          </NavLink>
         </div>
       </div>
     </div>

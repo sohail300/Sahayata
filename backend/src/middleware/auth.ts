@@ -5,7 +5,7 @@ import { Jwt } from "../interfaces/interfaces";
 
 dotenv.config();
 
-export const secretKey = process.env.SECRET_KEY;
+export const secretKey = process.env.JWT_SECRET;
 
 export async function authenticate(
   req: Request,

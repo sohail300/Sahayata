@@ -8,8 +8,6 @@ import AdminHomepage from "./pages/Admin/AdminHomepage";
 import FAQ from "./pages/FAQ";
 import AboutUs from "./pages/AboutUs";
 import Navbar from "./components/Navbar";
-import Profile from "./pages/Profile";
-import EditProfile from "./pages/DistrictAdmin/DistrictAdminEditProfile";
 import AdminSolvedCases from "./pages/Admin/AdminSolvedCases";
 import AdminEmergencyCases from "./pages/Admin/AdminEmergencyCases";
 import AdminNormalCases from "./pages/Admin/AdminNormalCases";
@@ -17,6 +15,8 @@ import RegisterAdmin from "./pages/DistrictAdmin/RegisterAdmin";
 import DistrictAdminProfile from "./pages/DistrictAdmin/DistrictAdminProfile";
 import AdminProfile from "./pages/Admin/AdminProfile";
 import DistrictAdminEditProfile from "./pages/DistrictAdmin/DistrictAdminEditProfile";
+import ForgotPassword from "./pages/DistrictAdmin/ForgotPassword";
+import ResetPassword from "./pages/DistrictAdmin/ResetPassword";
 
 function App() {
   return (
@@ -59,6 +59,14 @@ function App() {
         <Route
           path="/districtadmin/registerAdmin"
           element={<RegisterAdmin />}
+        />
+        <Route
+          path="/districtadmin/forgotpassword"
+          element={<ForgotPassword />}
+        />
+        <Route
+          path="/districtadmin/resetpassword/:token"
+          element={<ResetPassword />}
         />
 
         <Route path="/faq" element={<FAQ />} />

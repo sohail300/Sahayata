@@ -1,11 +1,12 @@
 import express, { Request, Response } from "express";
 import { Admin } from "../db/schema";
-import { adminEditSchema, loginSchema } from "../types/zodTypes";
+import { adminEditSchema } from "../types/adminSchema";
+import { loginSchema } from "../types/districtAdminSchema";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Jwt } from "../interfaces/interfaces";
 
-const secretKey = process.env.SECRET_KEY;
+const secretKey = process.env.JWT_SECRET;
 
 export async function adminLogin(req: Request, res: Response) {
   try {
@@ -14,12 +15,13 @@ export async function adminLogin(req: Request, res: Response) {
     if (parsedInput.success === false) {
       return res.status(401).json({
         msg: parsedInput.error.issues[0],
+        success: false,
       });
     }
 
-    const { email, password } = parsedInput.data;
+    const { number, password } = parsedInput.data;
 
-    const user = await Admin.findOne({ email: email });
+    const user = await Admin.findOne({ number });
 
     if (user) {
       const match = await bcrypt.compare(password, user.password as string);
@@ -29,20 +31,24 @@ export async function adminLogin(req: Request, res: Response) {
         const token = jwt.sign(payload, secretKey as string, {
           expiresIn: "24h",
         });
-        return res.status(200).json({ msg: "Logged in!", token });
+        return res
+          .status(200)
+          .json({ msg: "Logged in!", token, success: true });
       } else {
         return res.status(401).json({
           msg: "Invalid Credentials",
+          success: false,
         });
       }
     } else {
       return res.status(401).json({
         msg: "Invalid Credentials",
+        success: false,
       });
     }
   } catch (err) {
     console.log("[ERROR]", err);
-    return res.status(500).json({ msg: err });
+    return res.status(500).json({ msg: err, success: false });
   }
 }
 

@@ -17,7 +17,7 @@ exports.authenticate = authenticate;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-exports.secretKey = process.env.SECRET_KEY;
+exports.secretKey = process.env.JWT_SECRET;
 function authenticate(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {

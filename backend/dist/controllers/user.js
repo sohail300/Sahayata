@@ -20,16 +20,17 @@ exports.updateProfile = updateProfile;
 exports.postContact = postContact;
 const axios_1 = __importDefault(require("axios"));
 const schema_1 = require("../db/schema");
-const zodTypes_1 = require("../types/zodTypes");
+const userSchema_1 = require("../types/userSchema");
 const getDate_1 = require("../utils/getDate");
 const twilio_1 = __importDefault(require("twilio"));
+const caseSchema_1 = require("../types/caseSchema");
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const client = (0, twilio_1.default)(accountSid, authToken);
 function sendOTP(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const parsedInput = zodTypes_1.sendOTPSchema.safeParse(req.body);
+            const parsedInput = userSchema_1.sendOTPSchema.safeParse(req.body);
             if (parsedInput.success === false) {
                 return res.status(401).json({
                     msg: parsedInput.error.issues[0],
@@ -65,7 +66,7 @@ function sendOTP(req, res) {
 function verifyOTP(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const parsedInput = zodTypes_1.verifyOTPSchema.safeParse(req.body);
+            const parsedInput = userSchema_1.verifyOTPSchema.safeParse(req.body);
             if (parsedInput.success === false) {
                 return res.status(401).json({
                     msg: parsedInput.error.issues[0],
@@ -130,7 +131,7 @@ function postEmergencyCase(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const id = 12;
-            const parsedInput = zodTypes_1.emergencyCaseSchema.safeParse(req.body);
+            const parsedInput = caseSchema_1.emergencyCaseSchema.safeParse(req.body);
             if (parsedInput.success === false) {
                 return res.status(401).json({
                     msg: parsedInput.error.issues[0],
@@ -188,7 +189,7 @@ function updateProfile(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const id = 12;
-            const parsedInput = zodTypes_1.updateUserSchema.safeParse(req.body);
+            const parsedInput = userSchema_1.updateUserSchema.safeParse(req.body);
             if (parsedInput.success === false) {
                 return res.status(401).json({
                     msg: parsedInput.error.issues[0],
@@ -214,7 +215,7 @@ function updateProfile(req, res) {
 function postContact(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const parsedInput = zodTypes_1.contactSchema.safeParse(req.body);
+            const parsedInput = caseSchema_1.contactSchema.safeParse(req.body);
             if (parsedInput.success === false) {
                 return res.status(401).json({
                     msg: parsedInput.error.issues[0],

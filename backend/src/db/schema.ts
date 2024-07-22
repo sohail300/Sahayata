@@ -1,4 +1,15 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
+
+interface DistrictAdmin {
+  name: string;
+  email: string;
+  password: string;
+  number: string;
+  latitude: number;
+  longitude: number;
+  forgotPasswordVerifyToken: string | null;
+  forgotPasswordExpiryDate: Date | null;
+}
 
 // MongoDB Schema
 const userSchema = new mongoose.Schema({
@@ -46,7 +57,7 @@ const adminSchema = new mongoose.Schema({
   EmergencyCases: [{ type: mongoose.Schema.Types.ObjectId, ref: "Emergency" }],
 });
 
-const districtSchema = new mongoose.Schema({
+const districtSchema: Schema<DistrictAdmin> = new mongoose.Schema({
   name: {
     type: String,
     require: true,
@@ -68,6 +79,14 @@ const districtSchema = new mongoose.Schema({
   },
   longitude: {
     type: Number,
+  },
+  forgotPasswordVerifyToken: {
+    type: String,
+    require: false,
+  },
+  forgotPasswordExpiryDate: {
+    type: Date,
+    require: false,
   },
 });
 

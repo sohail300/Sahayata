@@ -23,10 +23,6 @@ const adminSchema = new mongoose_1.default.Schema({
         type: String,
         require: true,
     },
-    email: {
-        type: String,
-        require: true,
-    },
     password: {
         type: String,
         require: true,
@@ -76,7 +72,14 @@ const districtSchema = new mongoose_1.default.Schema({
     longitude: {
         type: Number,
     },
-    EmergencyCases: [{ type: mongoose_1.default.Schema.Types.ObjectId, ref: "Emergency" }],
+    forgotPasswordVerifyToken: {
+        type: String,
+        require: false,
+    },
+    forgotPasswordExpiryDate: {
+        type: Date,
+        require: false,
+    },
 });
 const emergencySchema = new mongoose_1.default.Schema({
     name: String,

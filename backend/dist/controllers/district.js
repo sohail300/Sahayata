@@ -13,85 +13,85 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.districtAdminLogin = districtAdminLogin;
-exports.getEmergency = getEmergency;
 exports.registerAdmin = registerAdmin;
+exports.sendEmail = sendEmail;
+exports.changePassword = changePassword;
+exports.getEmergency = getEmergency;
 const schema_1 = require("../db/schema");
 const dotenv_1 = __importDefault(require("dotenv"));
-const zodTypes_1 = require("../types/zodTypes");
+const adminSchema_1 = require("../types/adminSchema");
+const districtAdminSchema_1 = require("../types/districtAdminSchema");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const getDate_1 = require("../utils/getDate");
+const mailer_1 = require("../utils/mailer");
 dotenv_1.default.config();
-const secretKey = process.env.SECRET_KEY;
+const secretKey = process.env.JWT_SECRET;
 function districtAdminLogin(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const parsedInput = zodTypes_1.loginSchema.safeParse(req.body);
+            const parsedInput = districtAdminSchema_1.loginSchema.safeParse(req.body);
             if (parsedInput.success === false) {
                 return res.status(401).json({
                     msg: parsedInput.error.issues[0],
+                    success: false,
                 });
             }
-            const { email, password } = parsedInput.data;
-            const user = yield schema_1.District.findOne({ email: email });
+            const { number, password } = parsedInput.data;
+            const user = yield schema_1.District.findOne({ number: number });
+            console.log(user);
             if (user) {
                 const match = yield bcrypt_1.default.compare(password, user.password);
+                console.log(match);
                 if (match) {
                     const payload = { id: user._id, role: "district " };
                     const token = jsonwebtoken_1.default.sign(payload, secretKey, {
                         expiresIn: "24h",
                     });
-                    return res.status(200).json({ msg: "Logged in!", token });
+                    return res
+                        .status(200)
+                        .json({ msg: "Logged in!", token, success: true });
                 }
                 else {
                     return res.status(401).json({
                         msg: "Invalid Credentials",
+                        success: false,
                     });
                 }
             }
             else {
                 return res.status(401).json({
                     msg: "Invalid Credentials",
+                    success: false,
                 });
             }
         }
         catch (err) {
             console.log("[ERROR]", err);
-            return res.status(500).json({ msg: err });
-        }
-    });
-}
-function getEmergency(req, res) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const date = (0, getDate_1.getTodayDate)();
-        const emergencyCases = yield schema_1.Emergency.findOne({ date });
-        if (emergencyCases) {
-            res.status(200).json(emergencyCases);
-        }
-        else {
-            res.status(403).json({ msg: "No Emergency Cases" });
+            return res.status(500).json({ msg: err, success: false });
         }
     });
 }
 function registerAdmin(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const parsedInput = zodTypes_1.registerAdminSchema.safeParse(req.body);
+            const parsedInput = adminSchema_1.registerAdminSchema.safeParse(req.body);
             if (parsedInput.success === false) {
                 return res.status(401).json({
                     msg: parsedInput.error.issues[0],
+                    success: false,
                 });
             }
-            const { name, number, email, password, latitude, longitude } = parsedInput.data;
-            const admin = yield schema_1.Admin.findOne({ email: email });
+            const { name, number, password, latitude, longitude } = parsedInput.data;
+            const admin = yield schema_1.Admin.findOne({ number });
             if (admin) {
                 return res.status(403).json({ msg: "User already Exists" });
             }
             else {
+                const hashedPassword = yield bcrypt_1.default.hash(password, 10);
                 const obj = {
                     name,
-                    email,
-                    password,
+                    password: hashedPassword,
                     number,
                     latitude,
                     longitude,
@@ -99,12 +99,89 @@ function registerAdmin(req, res) {
                 };
                 const newAdmin = new schema_1.Admin(obj);
                 yield newAdmin.save();
-                return res.status(201).json({ msg: "Successfully Created Admin!" });
+                return res
+                    .status(201)
+                    .json({ msg: "Successfully Created Admin!", success: true });
             }
         }
         catch (err) {
             console.log("[ERROR]", err);
-            return res.status(500).json({ msg: err });
+            return res.status(500).json({ msg: err, success: false });
+        }
+    });
+}
+function sendEmail(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const parsedInput = districtAdminSchema_1.emailSchema.safeParse(req.body);
+            if (parsedInput.success === false) {
+                return res.status(401).json({
+                    msg: parsedInput.error.issues[0],
+                    success: false,
+                });
+            }
+            const { email } = parsedInput.data;
+            const admin = yield schema_1.District.findOne({ email });
+            if (admin) {
+                (0, mailer_1.mailer)(email, res);
+                return res.status(201).json({ msg: "Email sent!", success: true });
+            }
+            else {
+                return res
+                    .status(400)
+                    .json({ msg: "User does not exist", success: false });
+            }
+        }
+        catch (err) {
+            console.log("[ERROR]", err);
+            return res.status(500).json({ msg: err, success: false });
+        }
+    });
+}
+function changePassword(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const parsedInput = districtAdminSchema_1.resetPasswordSchema.safeParse(req.body);
+            if (parsedInput.success === false) {
+                return res.status(401).json({
+                    msg: parsedInput.error.issues[0],
+                    success: false,
+                });
+            }
+            const { password, token } = parsedInput.data;
+            const admin = yield schema_1.District.findOne({ forgotPasswordVerifyToken: token });
+            if (admin &&
+                admin.forgotPasswordExpiryDate != null &&
+                admin.forgotPasswordExpiryDate > new Date()) {
+                const hashedPassword = yield bcrypt_1.default.hash(password, 10);
+                admin.forgotPasswordExpiryDate = null;
+                admin.forgotPasswordVerifyToken = null;
+                admin.password = hashedPassword;
+                yield admin.save();
+                return res.status(201).json({ msg: "Password updated!", success: true });
+            }
+            else {
+                return res.status(400).json({ msg: "Invalid OTP", success: false });
+            }
+        }
+        catch (err) {
+            console.log("[ERROR]", err);
+            return res.status(500).json({ msg: err, success: false });
+        }
+    });
+}
+function getEmergency(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const date = (0, getDate_1.getTodayDate)();
+            const emergencyCases = yield schema_1.Emergency.findOne({ date });
+            return res
+                .status(200)
+                .json({ emergencyCases: emergencyCases || [], success: true });
+        }
+        catch (err) {
+            console.log("[ERROR]", err);
+            return res.status(500).json({ msg: err, success: false });
         }
     });
 }

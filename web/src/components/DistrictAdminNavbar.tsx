@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Menu, X, Home, User, LogOut } from "lucide-react";
 
 const DistrictAdminNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -24,7 +25,15 @@ const DistrictAdminNavbar = () => {
               icon={<User />}
               text="Profile"
             />
-            <NavLink to="/" icon={<LogOut />} text="Logout" />
+            <NavLink
+              to="/"
+              onClick={() => {
+                localStorage.removeItem("token");
+                navigate("/");
+              }}
+              icon={<LogOut />}
+              text="Logout"
+            />
           </div>
           <button
             className="md:hidden text-emerald-600 hover:text-orange-500 transition"
@@ -44,9 +53,13 @@ const DistrictAdminNavbar = () => {
             />
             <NavLink
               to="/"
+              onClick={() => {
+                localStorage.removeItem("token");
+                navigate("/");
+                toggleMenu();
+              }}
               icon={<LogOut />}
               text="Logout"
-              onClick={toggleMenu}
             />
           </div>
         )}
